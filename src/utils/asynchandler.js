@@ -1,5 +1,5 @@
 const asynchandler = (hand) =>{
-    (req,res,next)=>{
+    return (req,res,next)=>{
         Promise.resolve(hand(req,res,next)).reject((err)=>next(err))
     }
 }
