@@ -38,13 +38,13 @@ const userSchema = new mongoose.Schema({
         required: [true,"Password is required"]
     },
     refreshtoken:{
-        type:true,
+        type:String,
     }
 },{timestamps:true})
 
 userSchema.pre("save",async function(next){
    if(!this.isModified("password")) return next();
-   this.password=bcrypt(this.password,11);
+   this.password=await bcrypt(this.password,11);
    next()
 })
 

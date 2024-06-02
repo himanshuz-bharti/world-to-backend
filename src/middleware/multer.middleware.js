@@ -5,8 +5,7 @@ const storage = multer.diskStorage({
         cb(null,"./public/temp");
     },
     filename:function(req,file,cb){
-        const uniq = `${Date.now()}-${file.originalname}`
-        cb(null,uniq);
+        cb(null,file.originalname);
     }
 })
 
