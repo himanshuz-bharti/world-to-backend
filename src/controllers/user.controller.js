@@ -52,5 +52,69 @@ const registerUser = asynchandler(async (req,res) =>{
         new ApiResponse(200,creationdone,"User Created Succesfully")
     )
 })
+const generateaccessandrefresh = (userId)=>{
+    try {
+        const user = User.findById(userId);
+        const accesstoken=user.generateaccesstoken;
+        const refreshtoken=user.generaterefreshtoken;
 
-export {registerUser};
+        user.refreshtoken=refreshtoken;
+        user.save({validateBeforeSave:false});
+
+        return {accesstoken,refreshtoken};
+    } catch (error) {
+        throw new ApiError(500,"Error Genrating access and refresh token");
+    }
+}
+const loginuser = asynchandler(async(req,res)=>{
+    const {username,email,passwords} = req.body;
+    if(!username && !email) return new ApiError(400,"Enter atleast Username or email to login");
+    const finduser = await User.findOne({
+        $or:[{username},{email}]
+})
+    if(!finduser) return new ApiError(400,"User dont exist");
+    const Passcheck = await finduser.isPassCorr(passwords);
+    if(!Passcheck) return new ApiError(401,"Invalid credentials");
+
+    const {accesstoken,refreshtoken} = generateaccessandrefresh(finduser._id);
+
+    const loggedInUser = awaiytUser.findById(finduser._id)
+    const options = {
+        httpOnly:true,
+        secure:true,
+    }
+    return res.status(200).
+    cookie("accesstoken",accesstoken,options)
+    .cookie("refreshtoken",refreshtoken,options)
+    .json(
+        new ApiResponse(
+            200,
+            {
+                user:loggedInUser,accesstoken,refreshtoken,
+            },
+            "User logged in suceesfully"
+        )
+    )
+})
+const logoutuser = asynchandler(async(req,res)=>{
+   await User.findByIdAndUpdate(
+    req.user._id,
+    {
+        $set:{
+            refreshtoken:undefined
+        }
+    },{
+            new:true
+        }
+   )
+   const options = {
+    httpOnly:true,
+    secure:true,
+}
+   return res.status(200)
+   .clearCookie("accesstoken",options)
+   .clearCookie("refreshtoken",options)
+   .json(new ApiResponse(200,{},"User logged out"))
+
+})
+export {registerUser,loginuser,logoutuser};

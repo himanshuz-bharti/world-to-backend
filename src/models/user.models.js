@@ -44,12 +44,12 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre("save",async function(next){
    if(!this.isModified("password")) return next();
-   this.password=await bcrypt(this.password,11);
+   this.passwords=await bcrypt(this.passwords,11);
    next()
 })
 
-userSchema.methods.isPassCorr=async function(password){
-    return await  bcrypt(password,this.password)
+userSchema.methods.isPassCorr=async function(passwords){
+    return await  bcrypt(passwords,this.passwords)
 }
 
 userSchema.methods.generateaccesstoken=function(){
